@@ -1,0 +1,64 @@
+### Variables globales
+@baseUrl = http://localhost:8000/hogares
+@contentType = application/json
+
+### ============================================
+### 2. Login (obtener tokens)
+### ============================================
+# @name login
+POST http://localhost:8000/Sesion/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+username=ana.maria@example.com&password=123456
+
+
+
+### Guardar tokens de la respuesta
+@access_token = {{login.response.body.access_token}}
+@refresh_token = {{login.response.body.refresh_token}}
+@token_type = {{login.response.body.token_type}}
+
+
+### ============================================
+### 10. Listar hogares del usuario
+### ============================================
+GET {{baseUrl}}/hogares
+Authorization: {{token_type}} {{access_token}}
+
+### ============================================
+### 11. Crear un nuevo hogar
+### ============================================
+POST {{baseUrl}}/hogares
+Content-Type: {{contentType}}
+Authorization: {{token_type}} {{access_token}}
+
+{
+  "nombre_hogar": "Familia García",
+  "nombre_admin": "Carldadwos"
+}
+
+### Guardar el id_hogar de la respuesta (opcional)
+@id_hogar = 2
+
+### ============================================
+### 12. Obtener detalles de un hogar específico donde pone id_hogar cambiar a un numero
+### ============================================
+GET {{baseUrl}}/hogares/{{id_hogar}}
+Authorization: {{token_type}} {{access_token}}
+
+### ============================================
+### 13. Actualizar nombre del hogar
+### ============================================
+PUT {{baseUrl}}/hogares/{{id_hogar}}
+Content-Type: {{contentType}}
+Authorization: {{token_type}} {{access_token}}
+
+{
+  "nombre_familiar": "Familia García Actualizada"
+}
+
+### ============================================
+### 14. Eliminar un hogar (solo si no tiene miembros)
+### ============================================
+DELETE {{baseUrl}}/hogares/{{id_hogar}}
+Authorization: {{token_type}} {{access_token}}

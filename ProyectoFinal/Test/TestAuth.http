@@ -1,0 +1,113 @@
+### Variables globales
+@baseUrl = http://localhost:8000/Sesion
+@contentType = application/json
+
+### ============================================
+### 1. Registro de nuevo usuario
+### ============================================
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "nombre": "Ana Pérez",
+  "correo": "ana.maria@example.com",
+  "contraseña": "123456"
+}
+
+### ============================================
+### 2. Login (obtener tokens)
+### ============================================
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+username=ana.maria@example.com&password=nueva123
+
+### Guardar tokens de la respuesta
+@access_token = {{login.response.body.access_token}}
+@refresh_token = {{login.response.body.refresh_token}}
+@token_type = {{login.response.body.token_type}}
+
+### ============================================
+### 3. Obtener perfil del usuario (con access_token)
+### ============================================
+GET {{baseUrl}}/auth/me
+Authorization: {{token_type}} {{access_token}}
+
+### ============================================
+### 4. Actualizar perfil (requiere contraseña actual)
+### ============================================
+PUT {{baseUrl}}/auth/me
+Content-Type: {{contentType}}
+Authorization: {{token_type}} {{access_token}}
+
+{
+  "nombre": "Ana María Pérez",
+  "correo": "ana.maria@example.com",
+  "contraseña": "nueva123",
+  "current_password": "123456"
+}
+
+### Verificar cambio (volver a obtener perfil)
+GET {{baseUrl}}/auth/me
+Authorization: {{token_type}} {{access_token}}
+
+### ============================================
+### 5. Verificar contraseña (antes de cambiar perfil)
+### ============================================
+POST {{baseUrl}}/auth/verify-password
+Content-Type: {{contentType}}
+Authorization: {{token_type}} {{access_token}}
+
+{
+  "password": "nueva123"
+}
+
+### ============================================
+### 6. Renovar access_token usando refresh_token
+### ============================================
+POST {{baseUrl}}/auth/refresh
+Content-Type: {{contentType}}
+
+{
+  "refresh_token": "{{refresh_token}}"
+}
+
+### Guardar nuevo access_token de la respuesta
+@new_access_token = {{refresh.response.body.access_token}}
+
+### Probar el nuevo token
+GET {{baseUrl}}/auth/me
+Authorization: {{token_type}} {{new_access_token}}
+
+### ============================================
+### 7. Cerrar sesión (revocar refresh_token)
+### ============================================
+POST {{baseUrl}}/auth/logout
+Content-Type: {{contentType}}
+Authorization: {{token_type}} {{access_token}}
+
+{
+  "refresh_token": "{{refresh_token}}"
+}
+
+### Intentar renovar con refresh_token revocado (debería fallar)
+POST {{baseUrl}}/auth/refresh
+Content-Type: {{contentType}}
+
+{
+  "refresh_token": "{{refresh_token}}"
+}
+
+### ============================================
+### 8. Probar acceso sin token (debe dar 401)
+### ============================================
+GET {{baseUrl}}/auth/me
+
+### ============================================
+### 9. Login con credenciales incorrectas
+### ============================================
+POST {{baseUrl}}/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+username=ana@example.com&password=wrongpassword

@@ -1,0 +1,94 @@
+### Variables globales
+@baseUrl = http://localhost:8000/miembros
+@contentType = application/json
+
+### ============================================
+### 2. Login (obtener tokens)
+### ============================================
+# @name login
+POST http://localhost:8000/Sesion/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+username=ana.maria@example.com&password=123456
+
+
+
+### Guardar tokens de la respuesta
+@access_token = {{login.response.body.access_token}}
+@refresh_token = {{login.response.body.refresh_token}}
+@token_type = {{login.response.body.token_type}}
+
+### ============================================
+### 10. Listar hogares del usuario
+### ============================================
+GET http://localhost:8000/hogares/hogares
+Authorization: {{token_type}} {{access_token}}
+
+### IMDADWADASNFOAOW
+@id_hogar = 2
+### ============================================
+### 15. Listar miembros de un hogar (usando id_hogar)
+### ============================================
+GET http://localhost:8000/hogares/hogares/{{id_hogar}}/miembros
+Authorization: {{token_type}} {{access_token}}
+
+### ============================================
+### 16. Agregar un nuevo miembro a un hogar
+### ============================================
+POST http://localhost:8000/hogares/hogares/{{id_hogar}}/miembros
+Content-Type: {{contentType}}
+Authorization: {{token_type}} {{access_token}}
+
+{
+  "nombre": "María López",
+  "es_admin": false,
+  "preferencias_alimenticias": "{\"no_puede_comer\":[\"gluten\"],\"favoritas\":[\"pasta\"]}"
+}
+
+### Guardar el id_miembro de la respuesta
+@id_miembro = 1
+
+### ============================================
+### 17. Obtener detalles de un miembro específico
+### ============================================
+GET {{baseUrl}}/miembros/{{id_miembro}}
+Authorization: {{token_type}} {{access_token}}
+
+### ============================================
+### 18. Actualizar un miembro
+### ============================================
+PUT {{baseUrl}}/miembros/{{id_miembro}}
+Content-Type: {{contentType}}
+Authorization: {{token_type}} {{access_token}}
+
+{
+  "nombre": "María Garcíftyyfta",
+  "es_admin": true,
+  "preferencias_alimenticias": null,
+  "activo": true
+}
+
+### ============================================
+### 19. Obtener configuración de un miembro
+### ============================================
+GET {{baseUrl}}/miembros/{{id_miembro}}/configuracion
+Authorization: {{token_type}} {{access_token}}
+
+### ============================================
+### 20. Actualizar configuración de un miembro
+### ============================================
+PUT {{baseUrl}}/miembros/{{id_miembro}}/configuracion
+Content-Type: {{contentType}}
+Authorization: {{token_type}} {{access_token}}
+
+{
+  "crear_actividad": true,
+  "crear_tarea": false,
+  "administrar_miembros": false
+}
+
+### ============================================
+### 21. Eliminar un miembro
+### ============================================
+DELETE {{baseUrl}}/miembros/{{id_miembro}}
+Authorization: {{token_type}} {{access_token}}

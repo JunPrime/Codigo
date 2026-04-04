@@ -1,0 +1,118 @@
+### Variables globales
+@baseUrl = http://localhost:8000/tareas
+@contentType = application/json
+
+### ============================================
+### 2. Login (obtener tokens)
+### ============================================
+# @name login
+POST http://localhost:8000/Sesion/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+username=ana.maria@example.com&password=123456
+
+### Guardar tokens de la respuesta
+@access_token = {{login.response.body.access_token}}
+@refresh_token = {{login.response.body.refresh_token}}
+@token_type = {{login.response.body.token_type}}
+
+### ============================================
+### 10. Listar hogares del usuario
+### ============================================
+GET http://localhost:8000/hogares/hogares
+Authorization: {{token_type}} {{access_token}}
+
+### IMDADWADASNFOAOW
+@id_hogar = 1
+### ============================================
+### 15. Listar miembros de un hogar (usando id_hogar)
+### ============================================
+GET http://localhost:8000/hogares/hogares/{{id_hogar}}/miembros
+Authorization: {{token_type}} {{access_token}}
+
+### ============================================
+### 16. Agregar un nuevo miembro a un hogar
+### ============================================
+POST http://localhost:8000/hogares/hogares/{{id_hogar}}/miembros
+Content-Type: {{contentType}}
+Authorization: {{token_type}} {{access_token}}
+
+{
+  "nombre": "María López",
+  "es_admin": false,
+  "preferencias_alimenticias": "{\"no_puede_comer\":[\"gluten\"],\"favoritas\":[\"pasta\"]}"
+}
+
+### Guardar el id_miembro de la respuesta
+@id_miembro = 1
+
+
+### ============================================
+### 22. Listar tareas de un hogar
+### ============================================
+GET {{baseUrl}}/hogares/{{id_hogar}}/tareas
+Authorization: {{token_type}} {{access_token}}
+
+### ============================================
+### 23. Crear una nueva tarea en un hogar (sin asignar)
+### ============================================
+POST {{baseUrl}}/hogares/{{id_hogar}}/tareas
+Content-Type: {{contentType}}
+Authorization: {{token_type}} {{access_token}}
+
+{
+  "nombre": "Lavar los platos",
+  "descripcion": "Después de la cena",
+  "solo_adulto": false,
+  "duracion_minutos": 30,
+  "id_hogar_f": 1
+}
+
+### Guardar id_tarea
+@id_tarea = {{crearTarea.response.body.id_tarea}}
+
+### ============================================
+### 24. Asignar la tarea a un miembro
+### ============================================
+POST {{baseUrl}}/tareas/{{id_tarea}}/asignar
+Content-Type: {{contentType}}
+Authorization: {{token_type}} {{access_token}}
+
+{
+  "id_miembro": {{id_miembro}},
+  "fecha": "2025-04-05",
+  "hora": "20:00:00",
+  "duracion_minutos": 30,
+  "repetitiva": 0
+}
+
+### ============================================
+### 25. Completar la tarea
+### ============================================
+PUT {{baseUrl}}/tareas/{{id_tarea}}/completar
+Authorization: {{token_type}} {{access_token}}
+
+### ============================================
+### 26. Listar tareas pendientes de un miembro
+### ============================================
+GET {{baseUrl}}/miembros/{{id_miembro}}/tareas/pendientes
+Authorization: {{token_type}} {{access_token}}
+
+### ============================================
+### 27. Actualizar una tarea (ej. cambiar nombre)
+### ============================================
+PUT {{baseUrl}}/tareas/{{id_tarea}}
+Content-Type: {{contentType}}
+Authorization: {{token_type}} {{access_token}}
+
+{
+  "nombre": "Lavar platos y cubiertos",
+  "descripcion": "Incluye secar",
+  "id_hogar_f": {{id_hogar}}
+}
+
+### ============================================
+### 28. Eliminar una tarea
+### ============================================
+DELETE {{baseUrl}}/tareas/{{id_tarea}}
+Authorization: {{token_type}} {{access_token}}
