@@ -1,5 +1,5 @@
 ### Variables globales
-@baseUrl = http://localhost:8000/tareas
+@baseUrl = http://localhost:8000/actividades
 @contentType = application/json
 
 ### ============================================
@@ -62,71 +62,46 @@ Authorization: {{token_type}} {{access_token}}
 
 
 ### ============================================
-### 22. Listar tareas de un hogar
+### 29. Listar actividades de un miembro
 ### ============================================
-GET {{baseUrl}}/hogares/{{id_hogar}}/tareas
+GET {{baseUrl}}/actividades/miembros/{{id_miembro}}/actividades
 Authorization: {{token_type}} {{access_token}}
 
 ### ============================================
-### 23. Crear una nueva tarea en un hogar (sin asignar)
+### 30. Crear una actividad para un miembro
 ### ============================================
-POST {{baseUrl}}/hogares/{{id_hogar}}/tareas
+POST {{baseUrl}}/actividades/miembros/{{id_miembro}}/actividades
 Content-Type: {{contentType}}
 Authorization: {{token_type}} {{access_token}}
 
 {
-  "nombre": "Lavar los platos",
-  "descripcion": "Después de la cena",
-  "solo_adulto": false,
-  "duracion_minutos": 30,
-  "id_hogar_f": 1
+  "repetitiva_semanal": true,
+  "hora": "09:00:00",
+  "dias_semana": "1,3,5",
+  "duracion_minutos": 60,
+  "economica": false
 }
 
-### Guardar id_tarea
-@id_tarea = {{crearTarea.response.body.id_tarea}}
+### Guardar id_actividad
+@id_actividad = 1
 
 ### ============================================
-### 24. Asignar la tarea a un miembro
+### 31. Actualizar una actividad
 ### ============================================
-POST {{baseUrl}}/tareas/{{id_tarea}}/asignar
+PUT {{baseUrl}}/actividades/{{id_actividad}}
 Content-Type: {{contentType}}
 Authorization: {{token_type}} {{access_token}}
 
 {
-  "id_miembro": 1,
-  "fecha": "2025-04-05",
-  "hora": "20:00:00",
-  "duracion_minutos": 30,
-  "repetitiva": 0
+  "repetitiva_semanal": false,
+  "hora": "10:30:00",
+  "dias_semana": "2,4",
+  "duracion_minutos": 45,
+  "economica": true
 }
 
 ### ============================================
-### 25. Completar la tarea
+### 32. Eliminar una actividad
 ### ============================================
-PUT {{baseUrl}}/tareas/{{id_tarea}}/completar
-Authorization: {{token_type}} {{access_token}}
-
-### ============================================
-### 26. Listar tareas pendientes de un miembro
-### ============================================
-GET {{baseUrl}}/miembros/{{id_miembro}}/tareas/pendientes
-Authorization: {{token_type}} {{access_token}}
-
-### ============================================
-### 27. Actualizar una tarea (ej. cambiar nombre)
-### ============================================
-PUT {{baseUrl}}/tareas/{{id_tarea}}
-Content-Type: {{contentType}}
-Authorization: {{token_type}} {{access_token}}
-
-{
-  "nombre": "Lavar platos y cubiertos",
-  "descripcion": "Incluye secar",
-  "id_hogar_f": {{id_hogar}}
-}
-
-### ============================================
-### 28. Eliminar una tarea
-### ============================================
-DELETE {{baseUrl}}/tareas/{{id_tarea}}
+DELETE {{baseUrl}}/actividades/{{id_actividad}}
 Authorization: {{token_type}} {{access_token}}

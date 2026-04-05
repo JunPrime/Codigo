@@ -119,7 +119,7 @@ class ActividadBase(BaseModel):
     economica: Optional[bool] = False
 
 class ActividadCreate(ActividadBase):
-    id_miembro_f: int
+    pass
 
 class Actividad(ActividadBase):
     id_actividad: int
