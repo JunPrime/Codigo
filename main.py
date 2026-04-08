@@ -7,7 +7,7 @@ from modelos import modelos  # importa los modelos
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-z
+
 @app.get("/ping")
 def ping():
     return {"message": "pong"}
