@@ -1,6 +1,8 @@
 ### Variables globales
-@baseUrl = http://localhost:8000/Sesion
+
+@baseUrl = https://codigo-production.up.railway.app/Sesion
 @contentType = application/json
+
 
 ### ============================================
 ### 1. Registro de nuevo usuario

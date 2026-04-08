@@ -3,6 +3,11 @@ from fastapi import FastAPI, Depends
 from metodos import auth , homes , miembros, tareas, actividades
 
 app = FastAPI()
+
+@app.get("/ping")
+def ping():
+    return {"message": "pong"}
+
 app.include_router(auth.router, prefix="/Sesion")
 app.include_router(homes.router, prefix="/hogares")
 app.include_router(miembros.router, prefix="/miembros")
