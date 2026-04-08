@@ -1,9 +1,13 @@
 from fastapi import FastAPI, Depends
+from metodos import auth, homes, miembros, tareas, actividades
+from database import Base, engine
+from modelos import modelos  # importa los modelos
 
-from metodos import auth , homes , miembros, tareas, actividades
+# Crear tablas en la BD
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
+z
 @app.get("/ping")
 def ping():
     return {"message": "pong"}
