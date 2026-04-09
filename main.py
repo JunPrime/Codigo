@@ -16,7 +16,9 @@ app.add_middleware(
         "http://localhost:4200/",     # Para Angular
         "http://127.0.0.1:4200/",
         "https://JunPrime.github.io/",  # ← Tu dominio de GitHub Pages
-        "https://JunPrime.github.io/Domus",  # Si tiene subruta
+        "https://JunPrime.github.io/Domus",
+        "https://JunPrime.github.io/Domus/Login",  # Si tiene subruta
+        "https://JunPrime.github.io/Domus/Regis",
         ""                          # Temporalmente para pruebas
     ],
 
