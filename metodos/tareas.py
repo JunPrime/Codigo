@@ -10,41 +10,41 @@ from metodos.auth import get_current_user
 
 router = APIRouter(tags=["Tareas"])
 
-# ---------- Endpoints que empiezan con /hogares/{idHogar}/tareas ----------
+# ---------- Endpoints that start with /hogares/{idHogar}/tareas ----------
 @router.get("/hogares/{id_hogar}/tareas", response_model=List[TareaSchema])
 def listar_tareas_hogar(
     id_hogar: int,
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Verificar que el hogar pertenece al usuario
+    # Verify that the home belongs to the user
     hogar = db.query(Hogar).filter(Hogar.id_hogar == id_hogar).first()
     if not hogar or hogar.id_usuario_f != current_user.id_usuario:
-        raise HTTPException(status_code=403, detail="No tienes permiso para ver tareas de este hogar")
+        raise HTTPException(status_code=400, detail="You do not have permission to view tasks for this home")
     
     tareas = db.query(Tarea).filter(Tarea.id_hogar_f == id_hogar).all()
     return tareas
 
-@router.post("/hogares/{id_hogar}/tareas", response_model=TareaSchema, status_code=201)
+@router.post("/hogares/{id_hogar}/tareas", response_model=TareaSchema)
 def crear_tarea(
     id_hogar: int,
     tarea_data: TareaCreate,
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Verificar propiedad del hogar
+    # Verify home ownership
     hogar = db.query(Hogar).filter(Hogar.id_hogar == id_hogar).first()
     if not hogar or hogar.id_usuario_f != current_user.id_usuario:
-        raise HTTPException(status_code=403, detail="No eres propietario de este hogar")
+        raise HTTPException(status_code=400, detail="You are not the owner of this home")
     
-    # Si se especificó id_miembro_f, verificar que pertenezca al hogar
+    # If id_miembro_f is specified, verify it belongs to the home
     if tarea_data.id_miembro_f:
         miembro = db.query(Miembro).filter(
             Miembro.id_miembro == tarea_data.id_miembro_f,
             Miembro.id_hogar == id_hogar
         ).first()
         if not miembro:
-            raise HTTPException(status_code=400, detail="El miembro no pertenece a este hogar")
+            raise HTTPException(status_code=400, detail="The member does not belong to this home")
     
     nueva_tarea = Tarea(
         nombre=tarea_data.nombre,
@@ -63,7 +63,7 @@ def crear_tarea(
     db.refresh(nueva_tarea)
     return nueva_tarea
 
-# ---------- Endpoints de tareas individuales ----------
+# ---------- Individual task endpoints ----------
 @router.put("/tareas/{id_tarea}", response_model=TareaSchema)
 def actualizar_tarea(
     id_tarea: int,
@@ -73,14 +73,14 @@ def actualizar_tarea(
 ):
     tarea = db.query(Tarea).filter(Tarea.id_tarea == id_tarea).first()
     if not tarea:
-        raise HTTPException(status_code=404, detail="Tarea no encontrada")
+        raise HTTPException(status_code=400, detail="Task not found")
     
-    # Verificar que el usuario sea propietario del hogar
+    # Verify that the user is the owner of the home
     hogar = db.query(Hogar).filter(Hogar.id_hogar == tarea.id_hogar_f).first()
     if hogar.id_usuario_f != current_user.id_usuario:
-        raise HTTPException(status_code=403, detail="No tienes permiso para modificar esta tarea")
+        raise HTTPException(status_code=400, detail="You do not have permission to modify this task")
     
-    # Actualizar campos
+    # Update fields
     for key, value in tarea_data.dict(exclude_unset=True).items():
         setattr(tarea, key, value)
     
@@ -88,7 +88,7 @@ def actualizar_tarea(
     db.refresh(tarea)
     return tarea
 
-@router.delete("/tareas/{id_tarea}", status_code=204)
+@router.delete("/tareas/{id_tarea}")
 def eliminar_tarea(
     id_tarea: int,
     current_user: Usuario = Depends(get_current_user),
@@ -96,16 +96,15 @@ def eliminar_tarea(
 ):
     tarea = db.query(Tarea).filter(Tarea.id_tarea == id_tarea).first()
     if not tarea:
-        raise HTTPException(status_code=404, detail="Tarea no encontrada")
+        raise HTTPException(status_code=400, detail="Task not found")
     
     hogar = db.query(Hogar).filter(Hogar.id_hogar == tarea.id_hogar_f).first()
     if hogar.id_usuario_f != current_user.id_usuario:
-        raise HTTPException(status_code=403, detail="No tienes permiso para eliminar esta tarea")
+        raise HTTPException(status_code=400, detail="You do not have permission to delete this task")
     
-    # Verificar si tiene asignaciones futuras (asumimos que siempre se puede eliminar)
     db.delete(tarea)
     db.commit()
-    return None
+    return {"detail": "Task deleted successfully"}
 
 @router.post("/tareas/{id_tarea}/asignar", response_model=TareaSchema)
 def asignar_tarea(
@@ -116,22 +115,22 @@ def asignar_tarea(
 ):
     tarea = db.query(Tarea).filter(Tarea.id_tarea == id_tarea).first()
     if not tarea:
-        raise HTTPException(status_code=404, detail="Tarea no encontrada")
+        raise HTTPException(status_code=400, detail="Task not found")
     
     hogar = db.query(Hogar).filter(Hogar.id_hogar == tarea.id_hogar_f).first()
     if hogar.id_usuario_f != current_user.id_usuario:
-        raise HTTPException(status_code=403, detail="No tienes permiso para asignar esta tarea")
+        raise HTTPException(status_code=400, detail="You do not have permission to assign this task")
     
     id_miembro = data.get("id_miembro")
     if not id_miembro:
-        raise HTTPException(status_code=400, detail="Se requiere id_miembro")
+        raise HTTPException(status_code=400, detail="id_miembro is required")
     
-    # Verificar que el miembro pertenece al hogar
+    # Verify that the member belongs to the home
     miembro = db.query(Miembro).filter(Miembro.id_miembro == id_miembro, Miembro.id_hogar == tarea.id_hogar_f).first()
     if not miembro:
-        raise HTTPException(status_code=400, detail="El miembro no pertenece al hogar")
+        raise HTTPException(status_code=400, detail="The member does not belong to the home")
     
-    # Actualizar tarea
+    # Update task
     tarea.id_miembro_f = id_miembro
     tarea.fecha = data.get("fecha")
     tarea.hora = data.get("hora")
@@ -151,32 +150,32 @@ def completar_tarea(
 ):
     tarea = db.query(Tarea).filter(Tarea.id_tarea == id_tarea).first()
     if not tarea:
-        raise HTTPException(status_code=404, detail="Tarea no encontrada")
+        raise HTTPException(status_code=400, detail="Task not found")
     
     hogar = db.query(Hogar).filter(Hogar.id_hogar == tarea.id_hogar_f).first()
     if hogar.id_usuario_f != current_user.id_usuario:
-        raise HTTPException(status_code=403, detail="No tienes permiso para completar esta tarea")
+        raise HTTPException(status_code=400, detail="You do not have permission to complete this task")
     
     tarea.realizada = True
     db.commit()
     db.refresh(tarea)
     return tarea
 
-# ---------- Endpoint de tareas pendientes por miembro ----------
+# ---------- Endpoint for pending tasks by member ----------
 @router.get("/miembros/{id_miembro}/tareas/pendientes", response_model=List[TareaSchema])
 def tareas_pendientes_miembro(
     id_miembro: int,
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Verificar que el miembro existe y que el usuario es propietario del hogar
+    # Verify that the member exists and the user is the home owner
     miembro = db.query(Miembro).filter(Miembro.id_miembro == id_miembro).first()
     if not miembro:
-        raise HTTPException(status_code=404, detail="Miembro no encontrado")
+        raise HTTPException(status_code=400, detail="Member not found")
     
     hogar = db.query(Hogar).filter(Hogar.id_hogar == miembro.id_hogar).first()
     if hogar.id_usuario_f != current_user.id_usuario:
-        raise HTTPException(status_code=403, detail="No tienes permiso para ver las tareas de este miembro")
+        raise HTTPException(status_code=400, detail="You do not have permission to view tasks for this member")
     
     hoy = date.today()
     tareas = db.query(Tarea).filter(

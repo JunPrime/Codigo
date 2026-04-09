@@ -18,12 +18,12 @@ def obtener_miembro(
 ):
     miembro = db.query(Miembro).filter(Miembro.id_miembro == id_miembro).first()
     if not miembro:
-        raise HTTPException(status_code=404, detail="Miembro no encontrado")
+        raise HTTPException(status_code=404, detail="Member not found")
     
     # Verificar que el usuario sea propietario del hogar
     hogar = db.query(Hogar).filter(Hogar.id_hogar == miembro.id_hogar).first()
     if hogar.id_usuario_f != current_user.id_usuario:
-        raise HTTPException(status_code=403, detail="No tienes permiso para ver este miembro")
+        raise HTTPException(status_code=403, detail="You do not have permission to view this member")
     
     return miembro
 
@@ -37,11 +37,11 @@ def actualizar_miembro(
 ):
     miembro = db.query(Miembro).filter(Miembro.id_miembro == id_miembro).first()
     if not miembro:
-        raise HTTPException(status_code=404, detail="Miembro no encontrado")
+        raise HTTPException(status_code=404, detail="Member not found")
     
     hogar = db.query(Hogar).filter(Hogar.id_hogar == miembro.id_hogar).first()
     if hogar.id_usuario_f != current_user.id_usuario:
-        raise HTTPException(status_code=403, detail="No tienes permiso para modificar este miembro")
+        raise HTTPException(status_code=403, detail="You do not have permission to modify this member")
     
     # Actualizar campos si están presentes
     if "nombre" in data:
@@ -58,7 +58,7 @@ def actualizar_miembro(
     return miembro
 
 # DELETE /miembros/{idMiembro} - Desactivar o eliminar miembro
-@router.delete("/{id_miembro}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{id_miembro}", status_code=status.HTTP_200_OK)
 def eliminar_miembro(
     id_miembro: int,
     current_user: Usuario = Depends(get_current_user),
@@ -66,17 +66,18 @@ def eliminar_miembro(
 ):
     miembro = db.query(Miembro).filter(Miembro.id_miembro == id_miembro).first()
     if not miembro:
-        raise HTTPException(status_code=404, detail="Miembro no encontrado")
+        raise HTTPException(status_code=404, detail="Member not found")
     
     hogar = db.query(Hogar).filter(Hogar.id_hogar == miembro.id_hogar).first()
     if hogar.id_usuario_f != current_user.id_usuario:
-        raise HTTPException(status_code=403, detail="No tienes permiso para eliminar este miembro")
+        raise HTTPException(status_code=403, detail="You do not have permission to delete this member")
+    
     db.query(ConfiguracionMiembro).filter(
         ConfiguracionMiembro.id_miembro_f == id_miembro
     ).delete()
     db.delete(miembro)
     db.commit()
-    return None # Agregar Un mensaje de confrimacion
+    return {"message": "Member deleted successfully"}
 
 # GET /miembros/{idMiembro}/configuracion - Obtener permisos
 @router.get("/{id_miembro}/configuracion", response_model=ConfigSchema)
@@ -87,17 +88,17 @@ def obtener_configuracion(
 ):
     miembro = db.query(Miembro).filter(Miembro.id_miembro == id_miembro).first()
     if not miembro:
-        raise HTTPException(status_code=404, detail="Miembro no encontrado")
+        raise HTTPException(status_code=404, detail="Member not found")
     
     hogar = db.query(Hogar).filter(Hogar.id_hogar == miembro.id_hogar).first()
     if hogar.id_usuario_f != current_user.id_usuario:
-        raise HTTPException(status_code=403, detail="No tienes permiso")
+        raise HTTPException(status_code=403, detail="You do not have permission")
     
     config = db.query(ConfiguracionMiembro).filter(
         ConfiguracionMiembro.id_miembro_f == id_miembro
     ).first()
     if not config:
-        raise HTTPException(status_code=404, detail="Configuración no encontrada")
+        raise HTTPException(status_code=404, detail="Configuration not found")
     
     return config
 
@@ -111,17 +112,17 @@ def actualizar_configuracion(
 ):
     miembro = db.query(Miembro).filter(Miembro.id_miembro == id_miembro).first()
     if not miembro:
-        raise HTTPException(status_code=404, detail="Miembro no encontrado")
+        raise HTTPException(status_code=404, detail="Member not found")
     
     hogar = db.query(Hogar).filter(Hogar.id_hogar == miembro.id_hogar).first()
     if hogar.id_usuario_f != current_user.id_usuario:
-        raise HTTPException(status_code=403, detail="No tienes permiso")
+        raise HTTPException(status_code=403, detail="You do not have permission")
     
     config = db.query(ConfiguracionMiembro).filter(
         ConfiguracionMiembro.id_miembro_f == id_miembro
     ).first()
     if not config:
-        raise HTTPException(status_code=404, detail="Configuración no encontrada")
+        raise HTTPException(status_code=404, detail="Configuration not found")
     
     # Actualizar campos
     if "crear_actividad" in data:

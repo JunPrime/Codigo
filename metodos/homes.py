@@ -30,7 +30,7 @@ def crear_hogar(
     nombre_hogar = data.get("nombre_hogar")
     nombre_admin = data.get("nombre_admin")
     if not nombre_hogar or not nombre_admin:
-        raise HTTPException(status_code=400, detail="Faltan campos: nombre_hogar y nombre_admin")
+        raise HTTPException(status_code=400, detail="Missing fields: nombre_hogar and nombre_admin")
     
     # Llamar al stored procedure CrearHogar
     try:
@@ -45,7 +45,7 @@ def crear_hogar(
         db.commit()
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error al crear hogar: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error creating home: {str(e)}")
     
     # Obtener el hogar recién creado (último del usuario)
     nuevo_hogar = db.query(Hogar).filter(
@@ -53,7 +53,7 @@ def crear_hogar(
     ).order_by(Hogar.id_hogar.desc()).first()
     
     if not nuevo_hogar:
-        raise HTTPException(status_code=500, detail="No se pudo recuperar el hogar creado")
+        raise HTTPException(status_code=500, detail="Could not retrieve the created home")
     
     return nuevo_hogar
 
@@ -66,9 +66,9 @@ def obtener_hogar(
 ):
     hogar = db.query(Hogar).filter(Hogar.id_hogar == id_hogar).first()
     if not hogar:
-        raise HTTPException(status_code=404, detail="Hogar no encontrado")
+        raise HTTPException(status_code=404, detail="Home not found")
     if hogar.id_usuario_f != current_user.id_usuario:
-        raise HTTPException(status_code=403, detail="No eres propietario de este hogar")
+        raise HTTPException(status_code=403, detail="You are not the owner of this home")
     return hogar
 
 
@@ -82,13 +82,13 @@ def actualizar_hogar(
 ):
     hogar = db.query(Hogar).filter(Hogar.id_hogar == id_hogar).first()
     if not hogar:
-        raise HTTPException(status_code=404, detail="Hogar no encontrado")
+        raise HTTPException(status_code=404, detail="Home not found")
     if hogar.id_usuario_f != current_user.id_usuario:
-        raise HTTPException(status_code=403, detail="No eres propietario de este hogar")
+        raise HTTPException(status_code=403, detail="You are not the owner of this home")
     
     nuevo_nombre = data.get("nombre_familiar")
     if nuevo_nombre is None:
-        raise HTTPException(status_code=400, detail="El campo 'nombre_familiar' es requerido")
+        raise HTTPException(status_code=400, detail="The field 'nombre_familiar' is required")
     
     hogar.nombre_familiar = nuevo_nombre
     db.commit()
@@ -106,26 +106,23 @@ def eliminar_hogar(
 ):
     hogar = db.query(Hogar).filter(Hogar.id_hogar == id_hogar).first()
     if not hogar:
-        raise HTTPException(status_code=404, detail="Hogar no encontrado")
+        raise HTTPException(status_code=404, detail="Home not found")
     if hogar.id_usuario_f != current_user.id_usuario:
-        raise HTTPException(status_code=403, detail="No eres propietario de este hogar")
+        raise HTTPException(status_code=403, detail="You are not the owner of this home")
     
     # Verificar si el hogar tiene datos relacionados (miembros, tareas, stock, etc.)
     # Por simplicidad, asumimos que no se puede eliminar si tiene miembros
     from modelos.modelos import Miembro  # importación local para evitar circular
     miembros = db.query(Miembro).filter(Miembro.id_hogar == id_hogar).first()
     if miembros:
-        raise HTTPException(status_code=400, detail="No se puede eliminar el hogar porque tiene miembros asociados")
+        raise HTTPException(status_code=400, detail="Cannot delete home because it has associated members")
     
     db.delete(hogar)
     db.commit()
-    return None # Agregar un mensaje de eliminacion
-
+    return None
 
 
 ####################################
-
-
 
 
 # GET /hogares/{idHogar}/miembros - Listar miembros de un hogar
@@ -138,9 +135,9 @@ def listar_miembros(
     # Verificar que el hogar existe y pertenece al usuario
     hogar = db.query(Hogar).filter(Hogar.id_hogar == id_hogar).first()
     if not hogar:
-        raise HTTPException(status_code=404, detail="Hogar no encontrado")
+        raise HTTPException(status_code=404, detail="Home not found")
     if hogar.id_usuario_f != current_user.id_usuario:
-        raise HTTPException(status_code=403, detail="No eres propietario de este hogar")
+        raise HTTPException(status_code=403, detail="You are not the owner of this home")
     
     miembros = db.query(Miembro).filter(Miembro.id_hogar == id_hogar).all()
     return miembros
@@ -156,11 +153,11 @@ def agregar_miembro(
     # Verificar propiedad del hogar
     hogar = db.query(Hogar).filter(Hogar.id_hogar == id_hogar).first()
     if not hogar or hogar.id_usuario_f != current_user.id_usuario:
-        raise HTTPException(status_code=403, detail="No tienes permiso para agregar miembros a este hogar")
+        raise HTTPException(status_code=403, detail="You do not have permission to add members to this home")
     
     nombre = data.get("nombre")
     if not nombre:
-        raise HTTPException(status_code=400, detail="El campo 'nombre' es obligatorio")
+        raise HTTPException(status_code=400, detail="The field 'nombre' is required")
     
     es_admin = data.get("es_admin", False)
     preferencias = data.get("preferencias_alimenticias", None)
@@ -179,7 +176,7 @@ def agregar_miembro(
         db.commit()
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error al agregar miembro: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error adding member: {str(e)}")
     
     # Recuperar el miembro recién creado (el último con ese nombre en el hogar)
     nuevo_miembro = db.query(Miembro).filter(
@@ -188,6 +185,6 @@ def agregar_miembro(
     ).order_by(Miembro.id_miembro.desc()).first()
     
     if not nuevo_miembro:
-        raise HTTPException(status_code=500, detail="No se pudo recuperar el miembro creado")
+        raise HTTPException(status_code=500, detail="Could not retrieve the created member")
     
     return nuevo_miembro

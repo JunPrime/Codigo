@@ -83,7 +83,7 @@ def verify_refresh_token(token: str, db: Session):
 async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="No se pudieron validar las credenciales",
+        detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
@@ -116,7 +116,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 @router.post("/register", response_model=UsuarioSchema, status_code=201)
 def register(usuario: UsuarioCreate, db: Session = Depends(get_db)):
     if db.query(Usuario).filter(Usuario.correo == usuario.correo).first():
-        raise HTTPException(400, "El correo ya está registrado")
+        raise HTTPException(400, "Email already registered")
     hashed = get_password_hash(usuario.contraseña)
     db_usuario = Usuario(nombre=usuario.nombre, correo=usuario.correo, contraseña=hashed)
     db.add(db_usuario)
@@ -128,7 +128,7 @@ def register(usuario: UsuarioCreate, db: Session = Depends(get_db)):
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     usuario = authenticate_user(db, form_data.username, form_data.password)
     if not usuario:
-        raise HTTPException(401, "Correo o contraseña incorrectos")
+        raise HTTPException(401, "Incorrect email or password")
     
     access_token = create_access_token(data={"sub": usuario.id_usuario})
     refresh_token = create_refresh_token(data={"sub": usuario.id_usuario})
@@ -153,16 +153,14 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 def refresh(refresh_token: str = Body(..., embed=True), db: Session = Depends(get_db)):
     id_usuario = verify_refresh_token(refresh_token, db)
     if not id_usuario:
-        raise HTTPException(401, "Refresh token inválido o expirado")
+        raise HTTPException(401, "Invalid or expired refresh token")
     
     usuario = db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
     if not usuario:
-        raise HTTPException(401, "Usuario no encontrado")
+        raise HTTPException(401, "User not found")
     
     new_access = create_access_token(data={"sub": usuario.id_usuario})
-    # Opcional: rotar refresh token (generar uno nuevo y revocar el anterior)
     new_refresh = create_refresh_token(data={"sub": usuario.id_usuario})
-    # return { "access_token": new_access, "refresh_token": new_refresh, ... }
     
     return {
         "access_token": new_access,
@@ -178,8 +176,8 @@ def verify_password_endpoint(
     db: Session = Depends(get_db)
 ):
     if not verify_password(data.password, current_user.contraseña):
-        raise HTTPException(401, "Contraseña incorrecta")
-    return {"message": "Contraseña correcta"}
+        raise HTTPException(401, "Incorrect password")
+    return {"message": "Password verified"}
 
 @router.get("/me", response_model=UsuarioSchema)
 def me(current_user: Usuario = Depends(get_current_user)):
@@ -193,14 +191,14 @@ def update_user(
 ):
     # Verificar contraseña actual
     if not verify_password(update_data.current_password, current_user.contraseña):
-        raise HTTPException(400, "Contraseña actual incorrecta")
+        raise HTTPException(400, "Current password is incorrect")
     
     if update_data.nombre:
         current_user.nombre = update_data.nombre
     if update_data.correo:
         if update_data.correo != current_user.correo:
             if db.query(Usuario).filter(Usuario.correo == update_data.correo).first():
-                raise HTTPException(400, "Correo ya en uso")
+                raise HTTPException(400, "Email already in use")
         current_user.correo = update_data.correo
     if update_data.contraseña:
         current_user.contraseña = get_password_hash(update_data.contraseña)
@@ -216,4 +214,4 @@ def logout(refresh_token: str = Body(..., embed=True), db: Session = Depends(get
     if token_db:
         token_db.revoked = True
         db.commit()
-    return {"message": "Sesión cerrada correctamente"}
+    return {"message": "Session closed successfully"}
