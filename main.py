@@ -15,8 +15,11 @@ app.add_middleware(
         "http://127.0.0.1:5500/",     # Para Live Server
         "http://localhost:4200/",     # Para Angular
         "http://127.0.0.1:4200/",
+        "https://JunPrime.github.io/",  # ← Tu dominio de GitHub Pages
+        "https://JunPrime.github.io/Domus",  # Si tiene subruta
         ""                          # Temporalmente para pruebas
     ],
+
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],  # Incluir OPTIONS
     allow_headers=[""],  # Permitir todos los headers
