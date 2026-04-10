@@ -168,7 +168,7 @@ class GastoMiembroBase(BaseModel):
     valor_aproximado: Optional[Decimal] = None
 
 class GastoMiembroCreate(GastoMiembroBase):
-    id_miembro_f: int
+    pass
 
 class GastoMiembro(GastoMiembroBase):
     id_gasto: int
