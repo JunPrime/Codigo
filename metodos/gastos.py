@@ -49,9 +49,15 @@ def listar_gastos_miembro(
 # ----------------------------------------------------------------------
 # POST /miembros/{id_miembro}/gastos
 # ----------------------------------------------------------------------
+import logging
+
+# Configurar logging básico (puedes ajustarlo)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 @router.post(
     "/miembros/{id_miembro}/gastos",
-    response_model=GastoMiembroSchema,
+    response_model=GastoMiembroSchema,  # asegúrate de que sea el esquema correcto
     status_code=status.HTTP_201_CREATED,
     summary="Register a new expense for a member",
     description="Creates a new expense record linked to a member. Requires authentication and home ownership."
@@ -62,22 +68,37 @@ def registrar_gasto(
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    logger.info(f"=== Registrar gasto para miembro {id_miembro} ===")
+    logger.info(f"Usuario autenticado: id={current_user.id_usuario}, nombre={current_user.nombre}")
+    
     # Verify member exists
     miembro = db.query(Miembro).filter(Miembro.id_miembro == id_miembro).first()
     if not miembro:
+        logger.warning(f"Miembro {id_miembro} no encontrado")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Member not found"
         )
+    logger.info(f"Miembro encontrado: id={miembro.id_miembro}, nombre={miembro.nombre}, id_hogar={miembro.id_hogar}")
     
     # Verify home ownership
     hogar = db.query(Hogar).filter(Hogar.id_hogar == miembro.id_hogar).first()
+    if not hogar:
+        logger.error(f"Hogar {miembro.id_hogar} no encontrado para el miembro {id_miembro}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Home not found for this member"
+        )
+    logger.info(f"Hogar encontrado: id={hogar.id_hogar}, id_usuario_f={hogar.id_usuario_f}")
+    
     if hogar.id_usuario_f != current_user.id_usuario:
+        logger.warning(f"Permiso denegado: usuario {current_user.id_usuario} no es propietario del hogar {hogar.id_hogar} (propietario={hogar.id_usuario_f})")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to add expenses for this member"
         )
     
+    # Crear nuevo gasto
     nuevo_gasto = GastoMiembro(
         titulo=gasto_data.titulo,
         descripcion=gasto_data.descripcion,
@@ -87,9 +108,8 @@ def registrar_gasto(
     db.add(nuevo_gasto)
     db.commit()
     db.refresh(nuevo_gasto)
+    logger.info(f"Gasto creado con id {nuevo_gasto.id_gasto} para miembro {id_miembro}")
     return nuevo_gasto
-
-# ----------------------------------------------------------------------
 # GET /hogares/{id_hogar}/reporte-gastos
 # ----------------------------------------------------------------------
 @router.get(

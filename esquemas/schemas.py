@@ -168,16 +168,16 @@ class GastoMiembroBase(BaseModel):
     valor_aproximado: Optional[Decimal] = None
 
 class GastoMiembroCreate(GastoMiembroBase):
+    # No incluye id_miembro_f porque se toma de la ruta
     pass
 
-class GastoMiembro(GastoMiembroBase):
+class GastoMiembroResponse(GastoMiembroBase):
     id_gasto: int
     dia_registro: Optional[datetime]
     id_miembro_f: int
-    
-    class Config:
-        orm_mode = True
 
+    class Config:
+        from_attributes = True   # ← reemplaza orm_mode en Pydantic V2
 # ---------- ClasificacionIngrediente ----------
 class ClasificacionIngredienteBase(BaseModel):
     nombre: str
