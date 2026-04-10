@@ -1,23 +1,24 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from typing import List, Optional
+from typing import List
 from datetime import date
-from decimal import Decimal
+import logging
 
 from database import get_db
-from modelos.modelos import GastoMiembro, Miembro, Hogar, Usuario
+from modelos.modelos import GastoMiembro as GastoMiembroModel, Miembro, Hogar, Usuario
 from esquemas.schemas import GastoMiembroResponse, GastoMiembroCreate
 from metodos.auth import get_current_user
 
 router = APIRouter(prefix="/gastos", tags=["Gastos y Economía"])
+logger = logging.getLogger(__name__)
 
 # ----------------------------------------------------------------------
 # GET /miembros/{id_miembro}/gastos
 # ----------------------------------------------------------------------
 @router.get(
     "/miembros/{id_miembro}/gastos",
-    response_model=List[GastoMiembroSchema],
+    response_model=List[GastoMiembroResponse],
     status_code=status.HTTP_200_OK,
     summary="List personal expenses of a member",
     description="Returns all expenses registered for a specific member. Requires authentication and ownership of the member's home."
@@ -43,19 +44,19 @@ def listar_gastos_miembro(
             detail="You do not have permission to view expenses of this member"
         )
     
-    gastos = db.query(GastoMiembro).filter(GastoMiembro.id_miembro_f == id_miembro).order_by(GastoMiembro.dia_registro.desc()).all()
+    gastos = db.query(GastoMiembroModel).filter(GastoMiembroModel.id_miembro_f == id_miembro).order_by(GastoMiembroModel.dia_registro.desc()).all()
     return gastos
 
 # ----------------------------------------------------------------------
 # POST /miembros/{id_miembro}/gastos
 # ----------------------------------------------------------------------
-import logging
-
-# Configurar logging básico (puedes ajustarlo)
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-@router.post("/miembros/{id_miembro}/gastos", response_model=GastoMiembroResponse)
+@router.post(
+    "/miembros/{id_miembro}/gastos",
+    response_model=GastoMiembroResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Register a new expense for a member",
+    description="Creates a new expense record linked to a member. Requires authentication and home ownership."
+)
 def registrar_gasto(
     id_miembro: int,
     gasto_data: GastoMiembroCreate,
@@ -93,7 +94,7 @@ def registrar_gasto(
         )
     
     # Crear nuevo gasto
-    nuevo_gasto = GastoMiembro(
+    nuevo_gasto = GastoMiembroModel(
         titulo=gasto_data.titulo,
         descripcion=gasto_data.descripcion,
         valor_aproximado=gasto_data.valor_aproximado,
@@ -104,6 +105,8 @@ def registrar_gasto(
     db.refresh(nuevo_gasto)
     logger.info(f"Gasto creado con id {nuevo_gasto.id_gasto} para miembro {id_miembro}")
     return nuevo_gasto
+
+# ----------------------------------------------------------------------
 # GET /hogares/{id_hogar}/reporte-gastos
 # ----------------------------------------------------------------------
 @router.get(
@@ -149,7 +152,7 @@ def reporte_gastos_hogar(
             }
         )
         reporte = result.fetchall()
-        db.commit()  # Close cursor
+        db.commit()
     except Exception as e:
         db.rollback()
         raise HTTPException(
