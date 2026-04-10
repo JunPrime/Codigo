@@ -1,8 +1,9 @@
 from fastapi import FastAPI, Depends
-from metodos import auth, homes, miembros, tareas, actividades
+from metodos import auth, homes, miembros, tareas, actividades, gastos
 from database import Base, engine
 from modelos import modelos  # importa los modelos
 from fastapi.middleware.cors import CORSMiddleware
+
 # Crear tablas en la BD
 Base.metadata.create_all(bind=engine)
 
@@ -32,3 +33,4 @@ app.include_router(homes.router, prefix="/hogares")
 app.include_router(miembros.router, prefix="/miembros")
 app.include_router(tareas.router, prefix="/tareas")
 app.include_router(actividades.router, prefix="/actividades")
+app.include_router(gastos.router)
