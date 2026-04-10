@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from database import get_db
 from modelos.modelos import GastoMiembro, Miembro, Hogar, Usuario
-from esquemas.schemas import GastoMiembro as GastoMiembroSchema, GastoMiembroCreate
+from esquemas.schemas import GastoMiembroResponse, GastoMiembroCreate
 from metodos.auth import get_current_user
 
 router = APIRouter(prefix="/gastos", tags=["Gastos y Economía"])
@@ -55,13 +55,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-@router.post(
-    "/miembros/{id_miembro}/gastos",
-    response_model=GastoMiembroSchema,  # asegúrate de que sea el esquema correcto
-    status_code=status.HTTP_201_CREATED,
-    summary="Register a new expense for a member",
-    description="Creates a new expense record linked to a member. Requires authentication and home ownership."
-)
+@router.post("/miembros/{id_miembro}/gastos", response_model=GastoMiembroResponse)
 def registrar_gasto(
     id_miembro: int,
     gasto_data: GastoMiembroCreate,
