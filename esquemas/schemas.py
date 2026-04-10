@@ -3,10 +3,6 @@ from typing import Optional, List
 from datetime import date, time, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel
-from typing import Optional
-from datetime import datetime
-
 # ---------- Usuarios ----------
 class UsuarioBase(BaseModel):
     nombre: str
@@ -26,7 +22,7 @@ class UsuarioSchema(UsuarioBase):
     fecha_registro: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---------- Tokens ------------
 class Token(BaseModel):
@@ -37,8 +33,6 @@ class Token(BaseModel):
 
 class PasswordVerify(BaseModel):
     password: str
-
-
 
 # ---------- Hogares ----------
 class HogarBase(BaseModel):
@@ -52,7 +46,7 @@ class Hogar(HogarBase):
     id_usuario_f: int
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---------- Miembros ----------
 class MiembroBase(BaseModel):
@@ -69,7 +63,7 @@ class Miembro(MiembroBase):
     id_hogar: int
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---------- ConfiguracionMiembro ----------
 class ConfiguracionMiembroBase(BaseModel):
@@ -85,23 +79,22 @@ class ConfiguracionMiembro(ConfiguracionMiembroBase):
     id_miembro_f: int
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---------- Tareas ----------
-
 class TareaBase(BaseModel):
-    nombre: str   # nuevo
-    descripcion: Optional[str] = None   # nuevo
+    nombre: str
+    descripcion: Optional[str] = None
     repetitiva: Optional[int] = None
     realizada: Optional[bool] = False
-    hora: Optional[time] = None   # opcional porque al crear sin asignar podría no tener hora
-    fecha: Optional[date] = None   # opcional
+    hora: Optional[time] = None
+    fecha: Optional[date] = None
     duracion_minutos: Optional[int] = None
-    solo_adulto: Optional[bool] = False   # nuevo, según descripción
+    solo_adulto: Optional[bool] = False
 
 class TareaCreate(TareaBase):
     id_hogar_f: int
-    id_miembro_f: Optional[int] = None   # opcional
+    id_miembro_f: Optional[int] = None
 
 class Tarea(TareaBase):
     id_tarea: int
@@ -109,7 +102,8 @@ class Tarea(TareaBase):
     id_miembro_f: Optional[int] = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True
+
 # ---------- Actividades ----------
 class ActividadBase(BaseModel):
     repetitiva_semanal: Optional[bool] = False
@@ -126,7 +120,7 @@ class Actividad(ActividadBase):
     id_miembro_f: int
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---------- SeguimientoMedico ----------
 class SeguimientoMedicoBase(BaseModel):
@@ -142,7 +136,7 @@ class SeguimientoMedico(SeguimientoMedicoBase):
     id_miembro_f: int
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---------- Mensualidades ----------
 class MensualidadBase(BaseModel):
@@ -159,7 +153,7 @@ class Mensualidad(MensualidadBase):
     id_hogar_f: int
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---------- GastosMiembro ----------
 class GastoMiembroBase(BaseModel):
@@ -168,7 +162,6 @@ class GastoMiembroBase(BaseModel):
     valor_aproximado: Optional[Decimal] = None
 
 class GastoMiembroCreate(GastoMiembroBase):
-    # No incluye id_miembro_f porque se toma de la ruta
     pass
 
 class GastoMiembroResponse(GastoMiembroBase):
@@ -177,7 +170,8 @@ class GastoMiembroResponse(GastoMiembroBase):
     id_miembro_f: int
 
     class Config:
-        from_attributes = True   # ← reemplaza orm_mode en Pydantic V2
+        from_attributes = True
+
 # ---------- ClasificacionIngrediente ----------
 class ClasificacionIngredienteBase(BaseModel):
     nombre: str
@@ -189,7 +183,7 @@ class ClasificacionIngrediente(ClasificacionIngredienteBase):
     id_clasificacion: int
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---------- UnidadMedida ----------
 class UnidadMedidaBase(BaseModel):
@@ -203,7 +197,7 @@ class UnidadMedida(UnidadMedidaBase):
     id_unidad: int
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---------- TipoIngrediente ----------
 class TipoIngredienteBase(BaseModel):
@@ -221,7 +215,7 @@ class TipoIngrediente(TipoIngredienteBase):
     id_tipo_ingrediente: int
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---------- StockIngrediente ----------
 class StockIngredienteBase(BaseModel):
@@ -241,7 +235,7 @@ class StockIngrediente(StockIngredienteBase):
     fecha_registro: Optional[datetime]
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---------- HistorialConsumo ----------
 class HistorialConsumoBase(BaseModel):
@@ -260,9 +254,9 @@ class HistorialConsumo(HistorialConsumoBase):
     id_unidad: int
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
-# ---------- Esquemas para respuestas compuestas (ejemplo) ----------
+# ---------- Esquemas para respuestas compuestas ----------
 class StockDisponible(BaseModel):
     id_hogar: int
     id_tipo_ingrediente: int
@@ -273,7 +267,7 @@ class StockDisponible(BaseModel):
     proxima_caducidad: Optional[date]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Para consumir ingredientes (body esperado)
 class ConsumoItem(BaseModel):
